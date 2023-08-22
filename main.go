@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"gauss-go/service"
 )
 
 func main() {
-	for _, arg := range os.Args {
-		fmt.Println(arg)
+	options, err := service.GetArgs()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fmt.Println("Data", options)
 }

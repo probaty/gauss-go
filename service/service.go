@@ -3,7 +3,10 @@ package service
 import (
 	"flag"
 	"fmt"
+	"image"
+	"image/color"
 	"image/png"
+	"log"
 	"math"
 	"os"
 )
@@ -48,13 +51,24 @@ func GaussFilter(file *os.File, raduis int) {
 	bounds := img.Bounds()
 	width := bounds.Max.X
 	height := bounds.Max.Y
+	rgbaImage := img.(*image.RGBA)
 
 	for y := 0; y <= height; y++ {
 		for x := 0; x <= width; x++ {
 			points := getPixelsInCercle(Point{X: x, Y: y}, raduis)
-			fmt.Println(points)
-			return
+			color := getAvarageColorInCircle(points, Point{X: x, Y: y}, img, width, height)
+			rgbaImage.SetRGBA(x, y, color)
 		}
+	}
+
+	newFile, err := os.Create("new_img.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = png.Encode(newFile, rgbaImage)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -77,4 +91,26 @@ func getPixelsInCercle(point Point, raduis int) []Point {
 	}
 
 	return resultPoints
+}
+
+func getAvarageColorInCircle(cirle []Point, currentPoint Point, img image.Image, maxX int, maxY int) color.RGBA {
+	var r, g, b, a, count uint32
+	r, g, b, a = 0, 0, 0, 0
+	count = 0
+	for _, value := range cirle {
+		var rN, gN, bN, aN uint32
+		if value.X < 0 || value.X > maxX || value.Y < 0 || value.Y > maxY {
+			continue
+		} else {
+			color := img.At(value.X, value.Y)
+			rN, gN, bN, aN = color.RGBA()
+		}
+		r, g, b, a = r+rN, g+gN, b+bN, a+aN
+		count++
+	}
+	r = r / count / 256
+	b = b / count / 256
+	g = g / count / 256
+	a = a / count / 256
+	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
 }

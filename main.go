@@ -11,5 +11,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	service.GaussFilter(options.File, options.Raduis)
 	fmt.Println("Data", options)
 }
